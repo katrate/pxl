@@ -26,6 +26,8 @@ const RE_ELSE = /^else:\s*$/i;
 
 // Regex for (row x col) top-left based position syntax
 const RE_POS = /\((\d+)\s*x\s*(\d+)\)/gi;
+// Regex for bare WxH position syntax (without parentheses)
+const RE_BARE_POS = /\b(\d+)\s*x\s*(\d+)\b/gi;
 
 export function parse(source: string): { commands: Command[]; constants: Map<string, string> } {
   const commands: Command[] = [];
@@ -396,13 +398,20 @@ export { resolveMath };
 /** Resolve (row x col) to pixel number measured from top-left. */
 export function resolvePositions(line: string, width: number, height: number): string {
   if (width === 0 || height === 0) return line;
-  return line.replace(RE_POS, (_m, r, c) => {
+  line = line.replace(RE_POS, (_m, r, c) => {
     const row = parseInt(r, 10);
     const col = parseInt(c, 10);
     // Standard row-major: pixel = (row - 1) * width + col
     const px = (row - 1) * width + col;
     return String(px);
   });
+  line = line.replace(RE_BARE_POS, (_m, r, c) => {
+    const row = parseInt(r, 10);
+    const col = parseInt(c, 10);
+    const px = (row - 1) * width + col;
+    return String(px);
+  });
+  return line;
 }
 
 function escapeRegex(str: string): string {
