@@ -1,0 +1,51 @@
+name: Build & Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Bump patch version
+        id: version
+        run: |
+          npm version patch --no-git-tag-version
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Commit version bump
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add package.json
+          git commit -m "Bump version to v${{ steps.version.outputs.version }} [skip ci]"
+          git push origin main
+
+      - name: Build TypeScript
+        run: npm run build
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "v${{ steps.version.outputs.version }}"
+          name: "v${{ steps.version.outputs.version }}"
+          body: "Automated release for version v${{ steps.version.outputs.version }}"
+          generate_release_notes: true
+          make_latest: true

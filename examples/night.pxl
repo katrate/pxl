@@ -1,0 +1,69 @@
+##
+##  NIGHT — moon over water
+##  48x48 canvas
+##  pixel(r,c) = (r-1)*48 + c
+##
+
+init canvas 48x48
+
+## ============ SKY (rows 1-28) ============
+
+crt gradient sky:
+    start = #0A0A2E
+    end   = #2A154A
+    mode  = linear:vertical
+
+pen = sky
+fill rect(1, 48, 28)
+
+## ============ STARS (rows 3-20) ============
+
+pen = #FFFFFF
+fill px 101, 120, 158, 228, 248, 330, 352, 412, 438, 526
+fill px 540, 606, 632, 710, 740, 812, 826, 896, 926, 980
+
+pen = #8888CC
+fill px 156, 260, 315, 420, 505, 575, 650, 735, 810, 890
+
+## ============ MOON at row 10, col 24 ============
+## p(10,24) = 9*48 + 24 = 456
+
+pen = #FFE082
+fill circle(456, 6)
+
+pen = #FFF8E1
+fill circle(456, 4)
+
+## ============ MOUNTAINS at row 28 ============
+## p(28,c) = 27*48 + c = 1296 + c
+## Mountain 1: cols 1-24, alt 12  → p(28,1)=1297, p(28,24)=1320
+## Mountain 2: cols 16-42, alt 14 → p(28,16)=1312, p(28,42)=1338
+## Mountain 3: cols 34-48, alt 10 → p(28,34)=1330, p(28,48)=1344
+
+pen = #0D0D1A
+fill tng(1297, 1320, 12: top, normal)
+fill tng(1312, 1338, 14: top, normal)
+fill tng(1330, 1344, 10: top, normal)
+
+## ============ WATER (rows 29-48) ============
+
+crt gradient water:
+    start = #151530
+    end   = #050510
+    mode  = linear:vertical
+
+pen = water
+fill rect(1345, 48, 20)
+
+## ============ MOON REFLECTION on water ============
+## Centered at col 24, getting narrower as it goes down
+## Row 29: col 21-26 (width 6) → p(29,21) = 28*48+21 = 1365
+## Row 30: col 22-25 (width 4) → p(30,22) = 29*48+22 = 1414
+## Row 31: col 23-25 (width 3) → p(31,23) = 30*48+23 = 1463
+## Row 32: col 23-24 (width 2) → p(32,23) = 31*48+23 = 1511
+
+pen = #FFD700
+fill rect(1365, 6, 2)
+fill rect(1414, 4, 2)
+fill rect(1463, 3, 2)
+fill rect(1511, 2, 2)
