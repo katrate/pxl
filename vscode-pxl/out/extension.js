@@ -40,18 +40,22 @@ const path = __importStar(require("path"));
 const fs = __importStar(require("fs"));
 let terminal;
 function activate(context) {
-    const disposable = vscode.commands.registerCommand("pxl.runFile", () => {
-        const editor = vscode.window.activeTextEditor;
-        if (!editor) {
-            vscode.window.showErrorMessage("No active editor");
-            return;
+    const disposable = vscode.commands.registerCommand("pxl.runFile", (uri) => {
+        let fileUri = uri;
+        if (!fileUri) {
+            const editor = vscode.window.activeTextEditor;
+            if (!editor) {
+                vscode.window.showErrorMessage("No active editor");
+                return;
+            }
+            fileUri = editor.document.uri;
         }
-        const filePath = editor.document.uri.fsPath;
+        const filePath = fileUri.fsPath;
         if (!filePath.toLowerCase().endsWith(".pxl")) {
             vscode.window.showErrorMessage("Not a .pxl file");
             return;
         }
-        const workspaceFolder = vscode.workspace.getWorkspaceFolder(editor.document.uri);
+        const workspaceFolder = vscode.workspace.getWorkspaceFolder(fileUri);
         if (!workspaceFolder) {
             vscode.window.showErrorMessage("File must be inside a workspace folder");
             return;
@@ -75,5 +79,19 @@ function activate(context) {
         terminal.sendText(`node "${cliPath}" "${filePath}"`);
     });
     context.subscriptions.push(disposable);
+    const lensProvider = vscode.languages.registerCodeLensProvider("pxl", {
+        provideCodeLenses(document) {
+            const top = new vscode.Range(0, 0, 0, 0);
+            return [
+                new vscode.CodeLens(top, {
+                    title: "\u25B6 Run .pxl",
+                    command: "pxl.runFile",
+                    arguments: [document.uri],
+                    tooltip: "Render this .pxl file to PNG",
+                }),
+            ];
+        },
+    });
+    context.subscriptions.push(lensProvider);
 }
 function deactivate() { }
