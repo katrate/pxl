@@ -1,0 +1,83 @@
+{
+  "name": "pxl-lang",
+  "displayName": "PXL Lang",
+  "description": "Run PXL pixel-art language files and view the rendered PNG output",
+  "version": "0.1.0",
+  "publisher": "katrate",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/katrate/pxl.git"
+  },
+  "license": "ISC",
+  "engines": {
+    "vscode": "^1.84.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:pxl",
+    "onCommand:pxl.runFile"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "pxl",
+        "aliases": [
+          "PXL",
+          "pxl"
+        ],
+        "extensions": [
+          ".pxl"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "pxl",
+        "scopeName": "source.pxl",
+        "path": "./syntaxes/pxl.tmLanguage.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "pxl.runFile",
+        "title": "PXL: Run this file"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "when": "editorLangId == pxl",
+          "command": "pxl.runFile",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "pxl.runFile",
+          "when": "editorLangId == pxl"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "pxl.runFile",
+        "key": "ctrl+shift+p",
+        "when": "editorLangId == pxl"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "npx tsc -p .",
+    "package": "npx @vscode/vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "@types/vscode": "^1.84.0",
+    "typescript": "^7.0.2"
+  }
+}

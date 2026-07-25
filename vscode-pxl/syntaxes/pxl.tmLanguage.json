@@ -1,0 +1,64 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "PXL",
+  "scopeName": "source.pxl",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#keywords" },
+    { "include": "#colors" },
+    { "include": "#numbers" },
+    { "include": "#operators" },
+    { "include": "#strings" }
+  ],
+  "repository": {
+    "comments": {
+      "name": "comment.line.double-dash.pxl",
+      "begin": "##",
+      "end": "$",
+      "patterns": [
+        { "include": "#comments" }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        { "match": "\\b(init|canvas|pen|eraser|fill|let|set|repeat|for|to|if|else|crt|create|gradient|gradiant|in|range|break|border)\\b",
+          "name": "keyword.control.pxl" },
+        { "match": "\\b(px|rect|cube|circle|dig|tng|top|bottom|normal|rightangel|horizontal|vertical|start|end|mode|linear|radial)\\b",
+          "name": "keyword.other.pxl" },
+        { "match": "\\b(\\d+)\\s*x\\s*(\\d+)\\b",
+          "name": "constant.numeric.position.pxl" }
+      ]
+    },
+    "colors": {
+      "patterns": [
+        { "match": "#[0-9a-fA-F]{3,8}\\b",
+          "name": "constant.other.color.pxl" },
+        { "match": "\\b(black|white|red|green|blue|yellow|cyan|magenta|orange|purple|pink|brown|gray|grey|navy|teal|maroon|olive|lime|aqua|silver|gold|coral|indigo|violet|turquoise|tan|plum|slate|crimson|chocolate|cornflower|salmon|sky|mint|lavender|rose|peach|ivory|khaki|blush|charcoal|ebony|ivory|jade|ruby|sapphire|amber|bronze|copper|emerald|onyx|pearl|rust|steel|tin|wheat|zinc)\\b",
+          "name": "constant.other.color.pxl" }
+      ]
+    },
+    "numbers": {
+      "match": "\\b\\d+\\b",
+      "name": "constant.numeric.pxl"
+    },
+    "operators": {
+      "patterns": [
+        { "match": "=",
+          "name": "keyword.operator.assignment.pxl" },
+        { "match": "[+\\-*/]",
+          "name": "keyword.operator.arithmetic.pxl" },
+        { "match": "[<>!=]=?",
+          "name": "keyword.operator.comparison.pxl" },
+        { "match": ":",
+          "name": "keyword.operator.separator.pxl" },
+        { "match": ",",
+          "name": "keyword.operator.separator.pxl" }
+      ]
+    },
+    "strings": {
+      "begin": "\"",
+      "end": "\"",
+      "name": "string.quoted.double.pxl"
+    }
+  }
+}

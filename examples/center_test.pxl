@@ -1,4 +1,3 @@
-
 init canvas 900x900
 pen=black
-fill circle(900x900,900)
+fill circle(450x450,450)
