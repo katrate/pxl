@@ -1,7 +1,7 @@
 import { Command, PxlError, BorderSpec, BreakSpec } from "./types";
 import { Grid } from "./grid";
 import { GradientDef } from "./gradient";
-import { parseProcessedLine, substituteVars, substituteNumVars, resolveMath } from "./parser";
+import { parseProcessedLine, substituteVars, substituteNumVars, resolveMath, resolvePositions } from "./parser";
 
 export interface ExecResult {
   grid: Grid;
@@ -95,14 +95,14 @@ function executeCommand(cmd: Command, ctx: ExecCtx): void {
 
     // ---- Runtime variable assignment ----
     case "set_var": {
-      const val = evalNumericExpr(cmd.rawExpr, ctx.runtimeVars, ctx.constants, cmd.line);
+      const val = evalNumericExpr(cmd.rawExpr, ctx.runtimeVars, ctx.constants, cmd.line, ctx.grid?.width || 0, ctx.grid?.height || 0);
       ctx.runtimeVars.set(cmd.name, val);
       break;
     }
 
     // ---- Repeat loop ----
     case "repeat": {
-      const count = evalNumericExpr(cmd.countRaw, ctx.runtimeVars, ctx.constants, cmd.line);
+      const count = evalNumericExpr(cmd.countRaw, ctx.runtimeVars, ctx.constants, cmd.line, ctx.grid?.width || 0, ctx.grid?.height || 0);
       for (let iter = 0; iter < count; iter++) {
         executeBodyLines(cmd.bodyLines, ctx);
       }
@@ -111,8 +111,8 @@ function executeCommand(cmd: Command, ctx: ExecCtx): void {
 
     // ---- For loop ----
     case "for": {
-      const start = evalNumericExpr(cmd.rawStart, ctx.runtimeVars, ctx.constants, cmd.line);
-      const end = evalNumericExpr(cmd.rawEnd, ctx.runtimeVars, ctx.constants, cmd.line);
+      const start = evalNumericExpr(cmd.rawStart, ctx.runtimeVars, ctx.constants, cmd.line, ctx.grid?.width || 0, ctx.grid?.height || 0);
+      const end = evalNumericExpr(cmd.rawEnd, ctx.runtimeVars, ctx.constants, cmd.line, ctx.grid?.width || 0, ctx.grid?.height || 0);
       for (let i = start; i <= end; i++) {
         ctx.runtimeVars.set(cmd.varName, i);
         executeBodyLines(cmd.bodyLines, ctx);
@@ -125,7 +125,7 @@ function executeCommand(cmd: Command, ctx: ExecCtx): void {
       let matched = false;
       for (let idx = 0; idx < cmd.chain.length; idx++) {
         const { cond, bodyLines } = cmd.chain[idx];
-        if (evalCondition(cond, ctx.runtimeVars, ctx.constants, cmd.line)) {
+        if (evalCondition(cond, ctx.runtimeVars, ctx.constants, cmd.line, ctx.grid?.width || 0, ctx.grid?.height || 0)) {
           executeBodyLines(bodyLines, ctx);
           matched = true;
           break;
@@ -245,8 +245,8 @@ function executeBodyLines(bodyLines: string[], ctx: ExecCtx): void {
       rawStart = substituteNumVars(rawStart, ctx.runtimeVars);
       rawEnd = substituteVars(rawEnd, ctx.constants);
       rawEnd = substituteNumVars(rawEnd, ctx.runtimeVars);
-      const start = evalNumericExpr(rawStart, ctx.runtimeVars, ctx.constants, 0);
-      const end = evalNumericExpr(rawEnd, ctx.runtimeVars, ctx.constants, 0);
+      const start = evalNumericExpr(rawStart, ctx.runtimeVars, ctx.constants, 0, ctx.grid?.width || 0, ctx.grid?.height || 0);
+      const end = evalNumericExpr(rawEnd, ctx.runtimeVars, ctx.constants, 0, ctx.grid?.width || 0, ctx.grid?.height || 0);
       const { bodyLines: innerBody, nextIdx } = readInnerBlock(bodyLines, i + 1, lineIndent);
       for (let v = start; v <= end; v++) {
         ctx.runtimeVars.set(varName, v);
@@ -260,7 +260,7 @@ function executeBodyLines(bodyLines: string[], ctx: ExecCtx): void {
     if (innerRepeatMatch) {
       let rawCount = substituteVars(innerRepeatMatch[1].trim(), ctx.constants);
       rawCount = substituteNumVars(rawCount, ctx.runtimeVars);
-      const count = evalNumericExpr(rawCount, ctx.runtimeVars, ctx.constants, 0);
+      const count = evalNumericExpr(rawCount, ctx.runtimeVars, ctx.constants, 0, ctx.grid?.width || 0, ctx.grid?.height || 0);
       const { bodyLines: innerBody, nextIdx } = readInnerBlock(bodyLines, i + 1, lineIndent);
       for (let iter = 0; iter < count; iter++) executeBodyLines(innerBody, ctx);
       i = nextIdx;
@@ -300,7 +300,7 @@ function executeBodyLines(bodyLines: string[], ctx: ExecCtx): void {
       }
       let matched = false;
       for (let ci = 0; ci < chain.length; ci++) {
-        if (evalCondition(chain[ci].cond, ctx.runtimeVars, ctx.constants, 0)) {
+        if (evalCondition(chain[ci].cond, ctx.runtimeVars, ctx.constants, 0, ctx.grid?.width || 0, ctx.grid?.height || 0)) {
           executeBodyLines(chain[ci].bodyLines, ctx);
           matched = true;
           break;
@@ -315,6 +315,9 @@ function executeBodyLines(bodyLines: string[], ctx: ExecCtx): void {
     let processed = substituteVars(trimmed, ctx.constants);
     processed = substituteNumVars(processed, ctx.runtimeVars);
     processed = resolveMath(processed);
+    if (ctx.grid) {
+      processed = resolvePositions(processed, ctx.grid.width, ctx.grid.height);
+    }
 
     // Regular command — parse and execute
     const cmd = parseProcessedLine(processed, 0, ctx.gradientNames);
@@ -354,10 +357,13 @@ function evalNumericExpr(
   expr: string,
   runtimeVars: Map<string, number>,
   constants: Map<string, string>,
-  line: number
+  line: number,
+  gridWidth: number,
+  gridHeight: number
 ): number {
   let resolved = substituteVars(expr, constants);
   resolved = substituteNumVars(resolved, runtimeVars);
+  resolved = resolvePositions(resolved, gridWidth, gridHeight);
   // Keep spaces — they prevent "0--2" (decrement syntax) issues
   // when a substituted value is negative, e.g. "0 - -2" ✓ but "0--2" ✗
   if (!/^[\d+\-*/\s()]+$/.test(resolved)) {
@@ -378,10 +384,13 @@ function evalCondition(
   cond: string,
   runtimeVars: Map<string, number>,
   constants: Map<string, string>,
-  line: number
+  line: number,
+  gridWidth: number,
+  gridHeight: number
 ): boolean {
   let resolved = substituteVars(cond, constants);
   resolved = substituteNumVars(resolved, runtimeVars);
+  resolved = resolvePositions(resolved, gridWidth, gridHeight);
   if (!/^[\d+\-*/\s()><!=]+$/.test(resolved)) {
     throw new PxlError(`invalid condition: "${cond}" (resolved: "${resolved}")`, line);
   }

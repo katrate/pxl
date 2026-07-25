@@ -1,3 +1,0 @@
-init canvas 64x64
-pen=yellow
-fill circle(32*32,8)

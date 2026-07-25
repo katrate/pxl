@@ -1,0 +1,39 @@
+## Verify (row x col) coordinate system
+## (1x1) = top-left, (64x64) = bottom-right
+## (32x32) = center of 64x64 = pixel 2016
+
+init canvas 64x64
+
+## Background dark
+pen = #1a1a2e
+fill rect(1, 64, 64)
+
+## Corner markers to confirm (row x col) system
+## (1x1) should be top-left pixel
+pen = #ff0000
+fill px (1x1), (1x2), (2x1)
+
+## (1x64) should be top-right
+pen = #00ff00
+fill px (1x63), (1x64), (2x64)
+
+## (64x1) should be bottom-left
+pen = #0000ff
+fill px (63x1), (64x1), (64x2)
+
+## (64x64) should be bottom-right
+pen = #ffff00
+fill px (63x64), (64x63), (64x64)
+
+## Center circle at (32x32)
+pen = #ff6b35
+fill circle((32x32), 8)
+
+## Crosshair lines through center for verification
+pen = #ffffff
+fill px (32x31), (32x32), (32x33)
+fill px (31x32), (32x32), (33x32)
+
+## Middle of each edge
+pen = #888888
+fill px (1x32), (64x32), (32x1), (32x64)

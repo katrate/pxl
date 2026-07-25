@@ -106,6 +106,28 @@ pixel(row, col) = (row - 1) × width + col
 
 For a 90-wide canvas, pixel(5, 3) = (5-1)×90 + 3 = 363.
 
+#### `(row x col)` — Coordinate syntax
+
+Use `(row x col)` anywhere a pixel number is expected. It converts directly to the pixel index from **top-left**:
+
+| Syntax | On 64×64 | Position |
+|---|---|---|
+| `(1x1)` | Pixel **1** | Top-left |
+| `(32x32)` | Pixel **2016** | Center |
+| `(64x64)` | Pixel **4096** | Bottom-right |
+
+This works in **any** command, expression, or variable:
+
+```
+fill circle((32x32), 8)          # Center circle on 64x64
+fill px (1x1), (1x64), (64x1), (64x64)  # All four corners
+set cx = (32x32)                 # Store as runtime var
+for r = (1x1) to (64x64):        # Iterate over all pixels
+```
+
+![Coordinate verification](examples/center_verify.png)
+*Center verification: corner markers, center circle at (32x32), and edge midpoints on a 64×64 canvas.*
+
 ---
 
 ### `init canvas W x H` — Create the canvas
@@ -447,12 +469,19 @@ fill circle(4*8+4, 10/2)                            # center at pixel 36, radius
 
 ---
 
-## 📁 Example
+## 📁 Examples
 
+### Night landscape
 ```bash
-# Render the night scene
 pxl examples/night.pxl
 ```
+
+### Coordinate verification
+```bash
+pxl examples/center_verify.pxl
+```
+
+![center_verify output](examples/center_verify.png)
 
 ---
 

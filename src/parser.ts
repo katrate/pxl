@@ -24,11 +24,21 @@ const RE_IF = /^if\s+(.+):\s*$/i;
 const RE_ELIF = /^else\s+if\s+(.+):\s*$/i;
 const RE_ELSE = /^else:\s*$/i;
 
+// Regex for (row x col) top-left based position syntax
+const RE_POS = /\((\d+)\s*x\s*(\d+)\)/gi;
+
 export function parse(source: string): { commands: Command[]; constants: Map<string, string> } {
   const commands: Command[] = [];
   const lines = source.split(/\r?\n/);
   const gradientNames = new Set<string>();
   const variables = new Map<string, string>();
+  let canvasW = 0;
+  let canvasH = 0;
+
+  /** Convert (row x col) to pixel number measured from bottom-right */
+  function resolvePos(line: string): string {
+    return resolvePositions(line, canvasW, canvasH);
+  }
 
   let i = 0;
   while (i < lines.length) {
@@ -43,6 +53,7 @@ export function parse(source: string): { commands: Command[]; constants: Map<str
     const letMatch = raw.match(RE_LET);
     if (letMatch) {
       let varValue = substituteVars(letMatch[2].trim(), variables);
+      varValue = resolvePos(varValue);
       if (/^[\d+\-*/\s()]+$/.test(varValue)) {
         varValue = String(evalMath(varValue.replace(/\s+/g, '')));
       } else {
@@ -58,6 +69,7 @@ export function parse(source: string): { commands: Command[]; constants: Map<str
     if (setMatch) {
       // Substitute let constants into the expression, keep raw for runtime
       let expr = substituteVars(setMatch[2].trim(), variables);
+      expr = resolvePos(expr);
       commands.push({ kind: "set_var", name: setMatch[1], rawExpr: expr, line: lineNo });
       i++;
       continue;
@@ -67,6 +79,7 @@ export function parse(source: string): { commands: Command[]; constants: Map<str
     const repeatMatch = raw.match(RE_REPEAT);
     if (repeatMatch) {
       let rawCount = substituteVars(repeatMatch[1].trim(), variables);
+      rawCount = resolvePos(rawCount);
       const { block, nextIdx } = readBlockLines(lines, i + 1, indent);
       commands.push({ kind: "repeat", countRaw: rawCount, bodyLines: block, line: lineNo });
       i = nextIdx;
@@ -79,6 +92,8 @@ export function parse(source: string): { commands: Command[]; constants: Map<str
       const varName = forMatch[1];
       let rawStart = substituteVars(forMatch[2].trim(), variables);
       let rawEnd = substituteVars(forMatch[3].trim(), variables);
+      rawStart = resolvePos(rawStart);
+      rawEnd = resolvePos(rawEnd);
       const { block, nextIdx } = readBlockLines(lines, i + 1, indent);
       commands.push({ kind: "for", varName, rawStart, rawEnd, bodyLines: block, line: lineNo });
       i = nextIdx;
@@ -89,6 +104,7 @@ export function parse(source: string): { commands: Command[]; constants: Map<str
     const ifMatch = raw.match(RE_IF);
     if (ifMatch) {
       let cond = substituteVars(ifMatch[1].trim(), variables);
+      cond = resolvePos(cond);
       const { block: body, nextIdx: bodyEnd } = readBlockLines(lines, i + 1, indent);
       const chain: Array<{ cond: string; bodyLines: string[] }> = [{ cond, bodyLines: body }];
       let elseBodyLines: string[] | null = null;
@@ -104,6 +120,7 @@ export function parse(source: string): { commands: Command[]; constants: Map<str
         const elifMatch = peekLine.match(RE_ELIF);
         if (elifMatch) {
           let elifCond = substituteVars(elifMatch[1].trim(), variables);
+          elifCond = resolvePos(elifCond);
           const { block: elifBody, nextIdx: elifEnd } = readBlockLines(lines, nextLineIdx + 1, indent);
           chain.push({ cond: elifCond, bodyLines: elifBody });
           nextLineIdx = elifEnd;
@@ -129,6 +146,7 @@ export function parse(source: string): { commands: Command[]; constants: Map<str
     // Substitute let constants and preprocess math for regular commands
     raw = substituteVars(raw, variables);
     raw = resolveMath(raw);
+    raw = resolvePos(raw);
 
     // Extract border and break suffixes
     const afterBorder = extractBorder(raw, lineNo);
@@ -161,6 +179,8 @@ export function parse(source: string): { commands: Command[]; constants: Map<str
     if ((m = afterBreak.clean.match(RE_INIT))) {
       const width = parseInt(m[1], 10);
       const height = parseInt(m[2], 10);
+      canvasW = width;
+      canvasH = height;
       if (width <= 0 || height <= 0) throw new PxlError(`canvas dimensions must be positive, got ${width}x${height}`, lineNo);
       commands.push({ kind: "init_canvas", width, height, line: lineNo });
       i++; continue;
@@ -372,6 +392,18 @@ export { extractBorder, extractBreak };
 
 /** Full math resolution — strips parens and evaluates flat expressions. */
 export { resolveMath };
+
+/** Resolve (row x col) to pixel number measured from top-left. */
+export function resolvePositions(line: string, width: number, height: number): string {
+  if (width === 0 || height === 0) return line;
+  return line.replace(RE_POS, (_m, r, c) => {
+    const row = parseInt(r, 10);
+    const col = parseInt(c, 10);
+    // Standard row-major: pixel = (row - 1) * width + col
+    const px = (row - 1) * width + col;
+    return String(px);
+  });
+}
 
 function escapeRegex(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

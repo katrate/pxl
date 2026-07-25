@@ -1,0 +1,41 @@
+init canvas 24x24
+crt gradient night:
+  start = #0A0A2E
+  end = #1A1A4E
+  mode = linear:vertical
+
+## Fill full canvas with gradient
+pen = night
+fill rect(1, 24, 24)
+
+## Test 1: (row x col) directly in fill circle
+pen = yellow
+fill circle((12x12), 3)
+
+## Test 2: (row x col) in set expression used inside loop
+pen = white
+let star_count = 12
+repeat star_count:
+  fill px star_count
+
+## Test 3: (row x col) with let constant + for loop
+pen = #FF6644
+let right = (1x1)
+for i = (24x24) to (24x1):
+  fill px i
+
+## Test 4: (row x col) directly in fill px
+pen = #44FF44
+fill px (1x1), (2x1), (3x1), (4x1), (5x1)
+
+## Test 5: (row x col) directly in fill tng
+pen = #6644FF
+fill tng((4x1), (10x1), 6: top, normal)
+
+## Test 6: (row x col) directly in fill dig
+pen = #FF44FF
+fill dig((12x6), (18x12))
+
+## Test 7: (row x col) directly in fill range
+pen = #44FFFF
+fill in range((6x6), 4: horizontal)

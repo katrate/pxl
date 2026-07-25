@@ -17,8 +17,9 @@ function printUsage(): void {
     plx  <...>                          Alias for the same commands
 
   EXAMPLES:
-    pxl scene.pxl                       → scene.png
-    pxl scene.pxl -o artwork.png        → artwork.png
+    pxl scene.pxl                       → ./scene.png (same folder)
+    pxl examples/night.pxl              → examples/night.png (next to source)
+    pxl scene.pxl -o artwork.png        → artwork.png (custom name)
     pxl examples/                       → processes all .pxl files
     pxl .                               → processes current directory
 `);
@@ -91,7 +92,7 @@ if (stat.isDirectory()) {
   const oFlagIdx = args.indexOf("-o");
   const outPath = oFlagIdx !== -1
     ? args[oFlagIdx + 1]
-    : path.basename(inputPath, ".pxl") + ".png";
+    : inputPath.replace(/\.pxl$/i, '.png');
 
   const source = fs.readFileSync(inputPath, "utf-8");
 
