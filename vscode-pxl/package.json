@@ -45,10 +45,18 @@
     "commands": [
       {
         "command": "pxl.runFile",
-        "title": "PXL: Run this file"
+        "title": "Run .pxl",
+        "icon": "$(play)"
       }
     ],
     "menus": {
+      "editor/title": [
+        {
+          "when": "editorLangId == pxl && resourceExtname == .pxl",
+          "command": "pxl.runFile",
+          "group": "navigation"
+        }
+      ],
       "editor/context": [
         {
           "when": "editorLangId == pxl",

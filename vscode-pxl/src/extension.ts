@@ -4,6 +4,17 @@ import * as fs from "fs";
 
 let terminal: vscode.Terminal | undefined;
 
+function findPxlCli(fromFile: string): string | null {
+  let dir = path.dirname(fromFile);
+  while (true) {
+    const candidate = path.join(dir, "dist", "cli.js");
+    if (fs.existsSync(candidate)) return candidate;
+    const parent = path.dirname(dir);
+    if (parent === dir) return null;
+    dir = parent;
+  }
+}
+
 export function activate(context: vscode.ExtensionContext) {
   const disposable = vscode.commands.registerCommand("pxl.runFile", (uri?: vscode.Uri) => {
     let fileUri = uri;
@@ -22,54 +33,29 @@ export function activate(context: vscode.ExtensionContext) {
       return;
     }
 
-    const workspaceFolder = vscode.workspace.getWorkspaceFolder(fileUri);
-    if (!workspaceFolder) {
-      vscode.window.showErrorMessage("File must be inside a workspace folder");
-      return;
-    }
-
-    const workspaceRoot = workspaceFolder.uri.fsPath;
-
-    const cliPath = path.join(workspaceRoot, "dist", "cli.js");
-
-    if (!fs.existsSync(cliPath)) {
+    const cliPath = findPxlCli(filePath);
+    if (!cliPath) {
       vscode.window.showErrorMessage(
-        "PXL CLI not found — run 'npm install && npm run build' in the project root first",
+        "PXL CLI not found — dist/cli.js not found in any parent directory. Run 'npm install && npm run build' in the pxl-lang project root.",
         "Open Terminal"
       ).then((selection) => {
         if (selection === "Open Terminal") {
-          const buildTerminal = vscode.window.createTerminal({ cwd: workspaceRoot });
-          buildTerminal.sendText("npm install && npm run build");
-          buildTerminal.show();
+          const t = vscode.window.createTerminal();
+          t.show();
+          t.sendText("echo 'Run: cd <pxl-lang-dir> && npm install && npm run build'");
         }
       });
       return;
     }
 
     if (!terminal || terminal.exitStatus !== undefined) {
-      terminal = vscode.window.createTerminal({ cwd: workspaceRoot, name: "PXL" });
+      terminal = vscode.window.createTerminal({ name: "PXL" });
     }
     terminal.show();
     terminal.sendText(`node "${cliPath}" "${filePath}"`);
   });
 
   context.subscriptions.push(disposable);
-
-  const lensProvider = vscode.languages.registerCodeLensProvider("pxl", {
-    provideCodeLenses(document: vscode.TextDocument): vscode.CodeLens[] {
-      const top = new vscode.Range(0, 0, 0, 0);
-      return [
-        new vscode.CodeLens(top, {
-          title: "\u25B6 Run .pxl",
-          command: "pxl.runFile",
-          arguments: [document.uri],
-          tooltip: "Render this .pxl file to PNG",
-        }),
-      ];
-    },
-  });
-
-  context.subscriptions.push(lensProvider);
 }
 
 export function deactivate() {}
