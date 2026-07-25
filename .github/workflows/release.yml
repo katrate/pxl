@@ -29,12 +29,13 @@ jobs:
           npm version patch --no-git-tag-version
           VERSION=$(node -p "require('./package.json').version")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
+          node -e "const p=require('./vscode-pxl/package.json'); p.version='$VERSION'; require('fs').writeFileSync('./vscode-pxl/package.json', JSON.stringify(p, null, 2)+'\n')"
 
       - name: Commit version bump
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git add package.json
+          git add package.json vscode-pxl/package.json
           git commit -m "Bump version to v${{ steps.version.outputs.version }} [skip ci]"
           git push origin main
 
