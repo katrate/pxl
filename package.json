@@ -1,6 +1,6 @@
 {
   "name": "pxl-lang",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A domain-specific language for creating pixel art through code",
   "main": "dist/index.js",
   "bin": {
@@ -12,7 +12,11 @@
     "prepublishOnly": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["pixel-art", "dsl", "generative-art"],
+  "keywords": [
+    "pixel-art",
+    "dsl",
+    "generative-art"
+  ],
   "author": "",
   "license": "ISC",
   "devDependencies": {
