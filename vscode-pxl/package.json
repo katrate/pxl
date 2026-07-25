@@ -2,7 +2,7 @@
   "name": "pxl-lang",
   "displayName": "PXL Lang",
   "description": "Run PXL pixel-art language files and view the rendered PNG output",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "publisher": "katrate",
   "repository": {
     "type": "git",
