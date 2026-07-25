@@ -1,6 +1,6 @@
 {
   "name": "pxl-lang",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "A domain-specific language for creating pixel art through code",
   "main": "dist/index.js",
   "bin": {
