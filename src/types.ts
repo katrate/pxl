@@ -9,10 +9,13 @@ export interface BorderSpec {
   size: number;  // border thickness in pixels (default 1)
 }
 
+export type BreakMode = "conetric" | "liner";
+
 export interface BreakSpec {
   fill: number;   // how many to fill before breaking
   space: number;  // how many to skip for the break
   lines?: BreakLines; // direction of break lines (for rect/cube/tng)
+  mode?: BreakMode; // conetric (rings) or liner (spokes) for circles
 }
 
 export interface InitCanvasCmd {

@@ -1,5 +1,5 @@
 import { resolveColor } from "./colors";
-import { Command, PxlError, Orientation, BorderSpec, BreakSpec, BreakLines } from "./types";
+import { Command, PxlError, Orientation, BorderSpec, BreakSpec, BreakLines, BreakMode } from "./types";
 import { parseMode } from "./gradient";
 
 const RE_INIT = /^init\s+canvas\s+(\d+)\s*x\s*(\d+)$/i;
@@ -15,7 +15,7 @@ const RE_TNG = /^fill\s+tng\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*:\s*(top|bott
 const RE_GRADIENT_HEADER = /^(?:crt|create)\s+(?:gradiant|gradient)\s+([A-Za-z_][A-Za-z0-9_]*)\s*:\s*$/i;
 const RE_GRADIENT_PROP = /^(start|end|mode)\s*=\s*(.+)$/i;
 const RE_BORDER = /:\s*border=(px|fill)-colour=([A-Za-z_][A-Za-z0-9_]*|[#][0-9a-fA-F]{3,8})(?:-size=(\d+)px)?\s*\)$/i;
-const RE_BREAK = /[,:]\s*break=\s*\((\d+)\s*,\s*(\d+)\)(?:\s+lines-(horizontal|vertical))?\s*\)$/i;
+const RE_BREAK = /[,:]\s*break=\s*\((\d+)\s*,\s*(\d+)\)(?:\s+lines-(horizontal|vertical))?(?:-mode=(conetric|liner))?\s*\)$/i;
 const RE_LET = /^let\s+([A-Za-z_]\w*)\s*=\s*(.+)$/i;
 const RE_SET = /^set\s+([A-Za-z_]\w*)\s*=\s*(.+)$/i;
 const RE_REPEAT = /^repeat\s+(.+):\s*$/i;
@@ -307,7 +307,8 @@ function extractBreak(raw: string, lineNo: number): { clean: string; brk: BreakS
     const space = parseInt(m[2], 10);
     if (fill <= 0 || space <= 0) throw new PxlError(`break fill/space must be positive, got (${fill},${space})`, lineNo);
     const lines = m[3] ? (m[3].toLowerCase() as BreakLines) : undefined;
-    return { clean: raw.slice(0, m.index) + ')', brk: { fill, space, lines } };
+    const mode = m[4] ? (m[4].toLowerCase() as BreakMode) : undefined;
+    return { clean: raw.slice(0, m.index) + ')', brk: { fill, space, lines, mode } };
   }
   return { clean: raw, brk: null };
 }

@@ -1,0 +1,23 @@
+##
+##  ASHOK CHAKRA — using break mode=liner
+##  fill+space=15 gives 24 spokes (360/15 = 24)
+##  fill=2 keeps 2deg arc per spoke, space=13 skips 13deg gap
+##
+
+init canvas 101x101
+
+pen = white
+fill cube(1, 101)
+
+pen = #000080
+fill circle((51x51), 48)
+
+pen = white
+fill circle((51x51), 44)
+
+## 24 spokes: each cycle = 2° fill + 13° gap = 15° → 24 spokes
+pen = #000080
+fill circle((51x51), 44, break=(2,13)-mode=liner)
+
+pen = white
+fill circle((51x51), 5)

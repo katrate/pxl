@@ -466,6 +466,29 @@ function applyBreak(
       if (!distanceGroups.has(euclid)) distanceGroups.set(euclid, []);
       distanceGroups.get(euclid)!.push(p);
     }
+
+    if (brk.mode === "liner") {
+      // Liner mode: group pixels by integer angle (degrees), then apply
+      // fill/space pattern based on angle bin index.
+      // fill+space determines the number of spokes (360 / (fill+space) spokes)
+      const angleGroups = new Map<number, number[]>();
+      for (const p of pixelNums) {
+        const { row, col } = grid.pixelToRowCol(p);
+        let angle = Math.atan2(row - cr, col - cc) * (180 / Math.PI);
+        if (angle < 0) angle += 360;
+        const bin = Math.round(angle);
+        if (bin >= 360) continue;
+        if (!angleGroups.has(bin)) angleGroups.set(bin, []);
+        angleGroups.get(bin)!.push(p);
+      }
+      const result: number[] = [];
+      for (const [bin, pixels] of angleGroups) {
+        if ((bin % total) < fill) result.push(...pixels);
+      }
+      return result;
+    }
+
+    // Conetric mode (default): filter by distance from center
     const result: number[] = [];
     for (const [dist, pixels] of distanceGroups) {
       if ((dist % total) < fill) result.push(...pixels);

@@ -324,23 +324,26 @@ fill cube(1, 5: border=px-colour=red-size=2px)
 
 ---
 
-### 🔲 Break Modifier — `: break=(fill, space)[ lines-dir]`
+### 🔲 Break Modifier — `: break=(fill, space)[ lines-dir][-mode=mode]`
 
-Creates rhythmic patterns by skipping pixels during fill. Perfect for stripes, dashed lines, and window grids.
+Creates rhythmic patterns by skipping pixels during fill. Perfect for stripes, dashed lines, window grids, and radial spokes.
 
 ```
-fill in range(3, 30: vertical, break=(3,2))        # 3px fill, 2px skip
-fill cube(133, 8: break=(3,1) lines-vertical)       # 3 filled cols, 1 gap col
-fill cube(325, 8: break=(2,2) lines-horizontal)     # 2 filled rows, 2 gap rows
-fill circle(1190, 10: break=(3,2))                  # 3 rings fill, 2 rings skip
+fill in range(3, 30: vertical, break=(3,2))                # 3px fill, 2px skip
+fill cube(133, 8: break=(3,1) lines-vertical)               # 3 filled cols, 1 gap col
+fill cube(325, 8: break=(2,2) lines-horizontal)             # 2 filled rows, 2 gap rows
+fill circle(1190, 10: break=(3,2))                          # 3 rings fill, 2 rings skip (conetric)
+fill circle((51x51), 44, break=(2,13)-mode=liner)           # 24 radial spokes
 ```
 
 | Parameter | Description |
 |---|---|
-| `fill` | Number of pixels/rows/cols/rings to fill |
+| `fill` | Number of pixels/rows/cols/rings/degrees to fill |
 | `space` | Number to skip |
 | `lines-vertical` | For grid shapes: patterns columns (the default) |
 | `lines-horizontal` | For grid shapes: patterns rows |
+| `-mode=conetric` | For circles: concentric rings (default) |
+| `-mode=liner` | For circles: radial spokes. `fill+space` must divide 360° |
 
 **Behavior by shape type:**
 
@@ -349,7 +352,21 @@ fill circle(1190, 10: break=(3,2))                  # 3 rings fill, 2 rings skip
 | **linear** (range, diagonal) | Patterns along the line: fill N, skip M |
 | **pixel** (fill px) | Patterns through the pixel list in order |
 | **grid** (rect, cube, tng) | Row-by-row or column-by-column striping |
-| **circle** | Concentric rings sorted by distance from center |
+| **circle** (conetric) | Concentric rings sorted by distance from center |
+| **circle** (liner) | Radial spokes sorted by angle. `fill+space` degrees per spoke+gap |
+
+**Circle mode examples:**
+
+```
+## 24 spokes — 2° wide each, 13° gap (360 / 15 = 24 spokes)
+fill circle((51x51), 44, break=(2,13)-mode=liner)
+
+## 8 thick spokes — 15° wide each, 30° gap (360 / 45 = 8 spokes)
+fill circle((51x51), 44, break=(15,30)-mode=liner)
+
+## 3 concentric rings, 2 skipped (conetric is the default)
+fill circle(1760, 10: break=(3,2))
+```
 
 **Combined border + break:**
 ```
